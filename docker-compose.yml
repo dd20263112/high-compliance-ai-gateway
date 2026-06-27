@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  gateway-api:
+    build:
+      context: .
+      dockerfile: ./src/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=pii-cache
+      - REDIS_PORT=6379
+      - ENV=development
+    volumes:
+      - ./src:/app
+    depends_on:
+      - pii-cache
+
+  pii-cache:
+    image: redis:7.2-alpine
+    # SECURE: Locked down to localhost to prevent local machine network exposure
+    ports:
+      - "127.0.0.1:6379:6379"
+    # CRITICAL: Added --save "" to completely disable disk snapshots.
+    # CRITICAL: Changed eviction to volatile-ttl to respect strict PII expiration.
+    command: >
+      redis-server 
+      --appendonly no 
+      --save "" 
+      --maxmemory 256mb 
+      --maxmemory-policy volatile-ttl
