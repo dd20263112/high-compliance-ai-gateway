@@ -1,4 +1,5 @@
 import uuid
+import re
 from typing import Dict, Tuple
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
@@ -46,12 +47,24 @@ class PIIMaskingEngine:
 
         return masked_text, inverted_cache
 
+
     def rehydrate_response(self, text: str, token_mapping: Dict[str, str]) -> str:
         """
-        Replaces safe pseudonyms inside an LLM response back with their original PII data points.
+        Replaces safe pseudonyms inside an LLM response back with original PII,
+        ensuring case insensitivity to handle LLM capitalization quirks.
         """
         rehydrated_text = text
+        
+        # Loop over each token-to-PII pair in our inversion mapping
         for token, original_value in token_mapping.items():
-            rehydrated_text = rehydrated_text.replace(token, original_value)
+            # Escape the token characters (in case your token uses special regex chars like [ or ])
+            escaped_token = re.escape(token)
+            
+            # Compile a regex pattern that ignores casing entirely
+            pattern = re.compile(escaped_token, re.IGNORECASE)
+            
+            # Replace any variation of the token with the correct, original PII string
+            rehydrated_text = pattern.sub(original_value, rehydrated_text)
+            
         return rehydrated_text
 
