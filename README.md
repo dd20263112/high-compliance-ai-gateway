@@ -26,7 +26,7 @@ graph TD
     Engine -->|Generate Pseudonyms| Engine
     Engine -->|Write Sensitive Map Key-Value| Redis[(Redis Local Instance)]
     Engine -->|Anonymized Payload| Router[LiteLLM Proxy Router]
-    Router -->|Bearer Auth API Call| LLM[External LLM: OpenAI / Claude]
+    Router -->|Bearer Auth API Call| LLM[Upstream LLM: OpenAI / Anthropic]
     LLM -->|Anonymized Response Tokens| Router
     Router -->|Return Payload| API
     API -->|Read Map Key-Value| Redis
